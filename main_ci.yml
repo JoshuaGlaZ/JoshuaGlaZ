@@ -1,0 +1,34 @@
+name: Yearly Progress Bar CI
+
+on:
+  workflow_dispatch: 
+  schedule: 
+    - cron: '0 */8 * * *'
+
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+    - name: Checkout repository
+    - uses: actions/checkout@v2
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Update README.md
+      run: node index.js > README.md
+    - name: Get Percentage
+      id: get_percentage
+      run: node get_percentage.js
+    - name: Commit change & Push
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        percentage=$(echo "${{ steps.get_percentage.outputs.percentage }}")
+        git commit -am "Update yearly progress to $percentage%"
+        git push
