@@ -1,16 +1,18 @@
-### Hi there 👋
+### Hey, I'm JoshuaGlaZ
 
-<!--
-**JoshuaGlaZ/JoshuaGlaZ** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+- ☁ API & Github Action enthusiast
+- 📖 Currently learning ~~Hapi.js~~, Django, Next.js
+- ☕ Preferred Coffee over Tea
 
-Here are some ideas to get you started:
-
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+```text
+'
+'     ___       __       ___    __ __        
+'   /'___`\   /'__`\   /'___`\ /\ \\ \       ▛▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+'  /\_\ /\ \ /\ \/\ \ /\_\ /\ \\ \ \\ \        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 22.36 %
+'  \/_/// /__\ \ \ \ \\/_/// /__\ \ \\ \_    ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▞
+'     // /_\ \\ \ \_\ \  // /_\ \\ \__ ,__\  
+'    /\______/ \ \____/ /\______/ \/_/\_\_/  
+'    \/_____/   \/___/  \/_____/     \/_/    
+'                                                                           📢 Updated on Fri, 22 Mar 2024 11:51:06 GMT
+'      
+```
