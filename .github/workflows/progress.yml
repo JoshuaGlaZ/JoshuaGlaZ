@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-    - uses: actions/checkout@v2
+      uses: actions/checkout@v2
     - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
@@ -24,11 +24,11 @@ jobs:
       run: node index.js > README.md
     - name: Get Percentage
       id: get_percentage
-      run: node get_percentage.js
+      run: node percentage.js
     - name: Commit change & Push
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        percentage=$(echo "${{ steps.get_percentage.outputs.percentage }}")
+        percentage=$(echo ${ steps.get_percentage.outputs.percentage })
         git commit -am "Update yearly progress to $percentage%"
         git push
