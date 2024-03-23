@@ -20,8 +20,8 @@ function generateOutput(progressPercentage) {
 '    /\\______/ \\ \\____/ /\\______/ \\/_/\\_\\_/
 '    \\/_____/   \\/___/  \\/_____/     \\/_/
 '                                                                         📢 Updated on ${new Date(
-    now
-  ).toUTCString()}
+    now 
+  ).toUTCString()} 
 '
 \`\`\`
 `;
