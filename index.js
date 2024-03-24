@@ -7,7 +7,7 @@ function generateOutput(progressPercentage) {
   const asciiArt = `### Hey, I'm JoshuaGlaZ
 
 - ☁ API & Github Action enthusiast
-- 📖 Currently learning ~~Hapi.js~~, Django, Next.js
+- 📖 Currently learning ~~Hapi.js~~, Django
 - ☕ Preferred Coffee over Tea
 
 \`\`\`text
