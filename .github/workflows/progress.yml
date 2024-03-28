@@ -11,24 +11,24 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        python-version: [3.12]
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+    - name: Set up Node.js ${{ matrix.python-version }}
+      uses: actions/python@v2
       with:
-        node-version: ${{ matrix.node-version }}
+        python-version: ${{ matrix.python-version }}
 
     - name: Update README.md
-      run: node index.js > README.md
+      run: python index.js > README.md
 
-    - name: Generage Title
+    - name: Generate Commit Title
       id: generate-commit-message
       run: |
-        percentage=$(node percentage.js)
+        percentage=$(python percentage.js)
         echo "::set-output name=commit_message::Update yearly progress to $percentage%"
 
     - name: Commit change & Push
