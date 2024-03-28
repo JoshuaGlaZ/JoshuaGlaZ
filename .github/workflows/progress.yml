@@ -23,12 +23,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Update README.md
-      run: python index.js > README.md
+      run: python ascii.py > README.md
 
     - name: Generate Commit Title
       id: generate-commit-message
       run: |
-        percentage=$(python percentage.js)
+        percentage=$(python percentage.py)
         echo "::set-output name=commit_message::Update yearly progress to $percentage%"
 
     - name: Commit change & Push
