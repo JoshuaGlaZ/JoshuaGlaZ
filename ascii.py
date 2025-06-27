@@ -10,6 +10,7 @@ def generate_output(progress_percentage):
 - ☁ API, Automation & NLP Enthusiast
 - 📖 Currently learning ~~Hapi.js~~, Django
 - ☕ Preferred Coffee over Tea
+[<snippet progress>]
 """
   update_message = f"Updated on {now.strftime('%a, %d %b %Y %H:%M:%S')} UTC"
 
@@ -25,7 +26,9 @@ def generate_output(progress_percentage):
 '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
 '                                                                         📢 {update_message} 
 '
-```"""
+```
+[<endsnippet progress>]
+"""
   return f"{user_info}{ascii_art}" 
 
 if __name__ == "__main__" :

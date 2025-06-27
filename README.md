@@ -3,7 +3,7 @@
 - ☁ API, Automation & NLP Enthusiast
 - 📖 Currently learning ~~Hapi.js~~, Django
 - ☕ Preferred Coffee over Tea
-
+[<snippet progress>]
 ```text
 '
 '     ___       __      ___    ______    
@@ -16,3 +16,4 @@
 '                                                                         📢 Updated on Sat, 12 Apr 2025 08:10:50 UTC 
 '
 ```
+[<endsnippet progress>]
