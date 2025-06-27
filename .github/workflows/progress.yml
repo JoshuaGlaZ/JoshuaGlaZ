@@ -22,19 +22,31 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Update README.md
-      run: python ascii.py > README.md
+    - name: Generate ASCII and files
+      run: python ascii.py
 
-    - name: Generate Commit Title
-      id: generate-commit-message
-      run: |
-        percentage=$(python percentage.py)
-        echo "::set-output name=commit_message::Update yearly progress to $percentage%"
-
-    - name: Commit change & Push
+    - name: Commit README update
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
-        git commit -m "${{ steps.generate-commit-message.outputs.commit_message }}"
+        git commit -m "ci: update README with progress block" || echo "No changes"
+        git push
+
+    - name: Push snippet to gh-pages repo
+      uses: actions/checkout@v2
+      with:
+        repository: JoshuaGlaZ/joshuaglaz.github.io
+        path: site
+
+    - name: Copy snippet file
+      run: mv progress.txt site/_snippets/progress.txt
+
+    - name: Commit snippet
+      run: |
+        cd site
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add _snippets/progress.txt
+        git commit -m "ci: update progress snippet" || echo "No changes"
         git push
