@@ -1,11 +1,11 @@
 name: Yearly Progress Bar CI
- 
-on:
-  workflow_dispatch: 
-  schedule: 
-    - cron: '0 */8 * * *'
 
-jobs: 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */8 * * *"
+
+jobs:
   build:
     runs-on: ubuntu-latest
 
@@ -14,39 +14,46 @@ jobs:
         python-version: [3.12]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Node.js ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Generate ASCII and files
-      run: python ascii.py
+      - name: Generate ASCII and files
+        run: python ascii.py
 
-    - name: Commit README update
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add README.md
-        git commit -m "ci: update README with progress block" || echo "No changes"
-        git push
+      - name: Generate Commit Title
+        id: genmsg
+        run: |
+          percentage=$(python percentage.py)
+          # Simpan sebagai output step
+          echo "commit_message=Update yearly progress to $percentage%" >> $GITHUB_OUTPUT
 
-    - name: Push snippet to gh-pages repo
-      uses: actions/checkout@v2
-      with:
-        repository: JoshuaGlaZ/joshuaglaz.github.io
-        path: site
+      - name: Commit README update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "${{ steps.genmsg.outputs.commit_message }}" || echo "No README changes"
+          git push
 
-    - name: Copy snippet file
-      run: mv progress.txt site/_snippets/progress.txt
+      - name: Checkout repo gh
+        uses: actions/checkout@v2
+        with:
+          repository: JoshuaGlaZ/joshuaglaz.github.io
+          path: site
 
-    - name: Commit snippet
-      run: |
-        cd site
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add _snippets/progress.txt
-        git commit -m "ci: update progress snippet" || echo "No changes"
-        git push
+      - name: Copy snippet to repo gh
+        run: mv progress.txt site/_snippets/progress.txt
+
+      - name: Commit snippet update
+        run: |
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _snippets/progress.txt
+          git commit -m "${{ steps.genmsg.outputs.commit_message }}" || echo "No snippet changes"
+          git push
