@@ -28,7 +28,6 @@ def main():
 '                                                                         📢 Updated on {date_str} UTC 
 '
 ```"""
-
     readme_path = "README.md"
     if os.path.exists(readme_path):
         with open(readme_path, "r", encoding="utf-8") as f:
@@ -36,11 +35,14 @@ def main():
 
         pattern = r"()(.*?)()"
         
-        safe_art = ascii_art.replace("\\", "\\\\")
-        replacement = f"\\1\n{safe_art}\n\\3"
-        
         if re.search(pattern, content, re.DOTALL):
-            new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+            new_content = re.sub(
+                pattern, 
+                lambda m: f"{m.group(1)}\n{ascii_art}\n{m.group(3)}", 
+                content, 
+                flags=re.DOTALL
+            )
+            
             with open(readme_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
             print("✅ README updated successfully.")
