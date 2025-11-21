@@ -25,7 +25,7 @@ def main():
 '     // /_\\ \\\\ \\ \\_\\ \\ // /_\\ \\\\/\\ \\L\\ \\   {bottom}
 '    /\\______/ \\ \\____//\\______/ \\ \\____/
 '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
-'                                                         📢 Updated on {date_str} UTC 
+'                                                                         📢 Updated on {date_str} UTC 
 '
 ```"""
 
@@ -35,7 +35,9 @@ def main():
             content = f.read()
 
         pattern = r"()(.*?)()"
-        replacement = f"\\1\n{ascii_art}\n\\3"
+        
+        safe_art = ascii_art.replace("\\", "\\\\")
+        replacement = f"\\1\n{safe_art}\n\\3"
         
         if re.search(pattern, content, re.DOTALL):
             new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
