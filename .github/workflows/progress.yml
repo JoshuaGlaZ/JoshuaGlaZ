@@ -1,59 +1,82 @@
-name: Yearly Progress Bar CI
+name: Yearly Progress Bar
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */8 * * *"
+    - cron: "0 */8 * * *" # Runs every 8 hours
 
 jobs:
-  build:
+  update-readme:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [3.12]
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
 
-      - name: Generate ASCII and files
-        run: python ascii.py
-
-      - name: Generate Commit Title
-        id: genmsg
+      - name: Calculate Progress & Update README
+        shell: python
         run: |
-          percentage=$(python percentage.py)
-          # Simpan sebagai output step
-          echo "commit_message=Update yearly progress to $percentage%" >> $GITHUB_OUTPUT
+          import os
+          import re
+          from datetime import datetime, timezone
 
-      - name: Commit README update
+          now = datetime.now(timezone.utc)
+          start_of_year = datetime(now.year, 1, 1, tzinfo=timezone.utc)
+          end_of_year = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
+          progress = (now - start_of_year) / (end_of_year - start_of_year)
+          
+          length = 22
+          filled_len = int(progress * length)
+          bar = "▓" * filled_len + "░" * (length - filled_len)
+          upper = "▛" + "▔" * (length - 1)
+          bottom = " " * length + "▞"
+          percent_str = f"{progress * 100:.2f}%"
+          date_str = now.strftime('%a, %d %b %Y %H:%M:%S')
+          
+          ascii_art = f"""```text
+          '
+          '     ___       __      ___    ______    
+          '   /'___`\\   /'__`\\  /'___`\\ /\\  ___\\   
+          '  /\\_\\ /\\ \\ /\\ \\/\\ \\/\\_\\ /\\ \\\\ \\ \\__/      {upper}
+          '  \\/_/// /__\\ \\ \\ \\ \\/_/// /__\\ \\___``\\         {bar} {percent_str}
+          '     // /_\\ \\\\ \\ \\_\\ \\ // /_\\ \\\\/\\ \\L\\ \\   {bottom}
+          '    /\\______/ \\ \\____//\\______/ \\ \\____/
+          '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
+          '                                                                         📢 Updated on {date_str} UTC 
+          '
+          ```"""
+
+          readme_path = "README.md"
+          if os.path.exists(readme_path):
+              with open(readme_path, "r", encoding="utf-8") as f:
+                  content = f.read()
+
+              pattern = r"()(.*?)()"
+              replacement = f"\\1\n{ascii_art}\n\\3"
+              
+              if re.search(pattern, content, re.DOTALL):
+                  new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+                  with open(readme_path, "w", encoding="utf-8") as f:
+                      f.write(new_content)
+                  print("README updated successfully.")
+              else:
+                  print("Error: Markers not found in README.")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"commit_message=Update progress to {percent_str}\n")
+
+      - name: Commit and Push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "${{ steps.genmsg.outputs.commit_message }}" || echo "No README changes"
-          git push
-
-      - name: Checkout repo gh
-        uses: actions/checkout@v2
-        with:
-          repository: JoshuaGlaZ/joshuaglaz.github.io
-          path: site
-
-      - name: Copy snippet to repo gh
-        run: mv progress.txt site/_snippets/progress.txt
-
-      - name: Commit snippet update
-        run: |
-          cd site
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _snippets/progress.txt
-          git commit -m "${{ steps.genmsg.outputs.commit_message }}" || echo "No snippet changes"
+          # Only commit if there are changes
+          git diff --staged --quiet || git commit -m "${{ steps.update.outputs.commit_message }}"
           git push
