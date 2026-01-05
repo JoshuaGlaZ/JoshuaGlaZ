@@ -27,7 +27,7 @@ def generate_ascii_art(progress, timestamp):
 '     // /_\\ \\\\ \\ \\_\\ \\ // /_\\ \\\\/\\ \\L\\ \\   {'▁' * 22}▞
 '    /\\______/ \\ \\____//\\______/ \\ \\____/
 '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
-'                                                                         📢 Updated on {ts} UTC 
+'                                                                         Updated on {ts} UTC 
 '"""
 
 def fetch_github_stats():
@@ -71,10 +71,10 @@ def generate_stats_section(stats):
         return ""
     
     return f"""
-**⚡ Quick Stats**
+**Quick Stats**
 ```
-📦 {stats.get('repos', 0):>3} Public Repos    ⭐ {stats.get('stars', 0):>3} Stars Earned
-📝 {stats.get('gists', 0):>3} Gists           👥 {stats.get('followers', 0):>3} Followers
+{stats.get('repos', 0):>3} Public Repos    {stats.get('stars', 0):>3} Stars Earned
+{stats.get('gists', 0):>3} Gists           {stats.get('followers', 0):>3} Followers
 ```
 """
 
@@ -97,15 +97,18 @@ def main():
     readme_content = generate_readme(progress, timestamp, stats)
     ascii_content = generate_ascii_art(progress, timestamp)
     
+    metadata_dir = Path(".workflows")
+    metadata_dir.mkdir(exist_ok=True)
+    
     Path("README.md").write_text(readme_content, encoding='utf-8')
-    Path("progress.txt").write_text(ascii_content, encoding='utf-8')
+    (metadata_dir / "progress.txt").write_text(ascii_content, encoding='utf-8')
     
     metadata = {
         'progress': f"{progress * 100:.2f}",
         'timestamp': timestamp.isoformat(),
         'stats': stats
     }
-    Path(".workflows/.metadata.json").write_text(json.dumps(metadata, indent=2), encoding='utf-8')
+    (metadata_dir / ".metadata.json").write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     
     print(f"{progress * 100:.2f}")
 

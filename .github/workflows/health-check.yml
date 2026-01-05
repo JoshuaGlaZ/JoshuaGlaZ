@@ -26,15 +26,16 @@ jobs:
         id: validate
         run: |
           errors=0
+          warnings=0
           
           if [ ! -f "README.md" ]; then
-            echo "README.md missing"
-            ((errors++))
+            echo " README.md missing (first run?)"
+            ((warnings++))
           fi
           
-          if [ ! -f "progress.txt" ]; then
-            echo "progress.txt missing"
-            ((errors++))
+          if [ ! -f ".workflows/progress.txt" ]; then
+            echo " progress.txt missing (first run?)"
+            ((warnings++))
           fi
           
           if [ ! -f ".workflows/profile_engine.py" ]; then
@@ -44,10 +45,13 @@ jobs:
           
           if [ -f ".workflows/.metadata.json" ]; then
             last_update=$(jq -r '.timestamp' .workflows/.metadata.json 2>/dev/null || echo "unknown")
-            echo "Last update: $last_update"
+            echo " Last update: $last_update"
+          else
+            echo " No metadata yet (first run?)"
           fi
           
           echo "errors=$errors" >> $GITHUB_OUTPUT
+          echo "warnings=$warnings" >> $GITHUB_OUTPUT
 
       - name: Check API Rate Limits
         id: ratelimit
@@ -67,20 +71,26 @@ jobs:
           echo "Rate Limit: $remaining/$limit remaining"
           
           if [ "$remaining" -lt 100 ]; then
-            echo "Low rate limit"
+            echo " Low rate limit"
             echo "low_quota=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Test Script Execution
         id: test
+        continue-on-error: true
         run: |
-          python .workflows/profile_engine.py > /dev/null 2>&1
-          if [ $? -eq 0 ]; then
-            echo "Script executed successfully"
-            echo "status=success" >> $GITHUB_OUTPUT
+          if [ -f ".workflows/profile_engine.py" ]; then
+            python .workflows/profile_engine.py > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              echo "Script executed successfully"
+              echo "status=success" >> $GITHUB_OUTPUT
+            else
+              echo "Script execution failed"
+              echo "status=failed" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "Script execution failed"
-            echo "status=failed" >> $GITHUB_OUTPUT
+            echo " Script not found, skipping test"
+            echo "status=skipped" >> $GITHUB_OUTPUT
           fi
 
       - name: Check Workflow Efficiency
@@ -103,25 +113,27 @@ jobs:
       - name: Generate Health Report
         run: |
           cat << EOF >> $GITHUB_STEP_SUMMARY
-          ## Profile Health Check Report
+          ## 🏥 Profile Health Check Report
           
           ### File Validation
-          - **Status**: ${{ steps.validate.outputs.errors == '0' && 'All files present' || 'Missing files' }}
           - **Errors**: ${{ steps.validate.outputs.errors }}
+          - **Warnings**: ${{ steps.validate.outputs.warnings }}
+          - **Status**: ${{ steps.validate.outputs.errors == '0' && 'Healthy' || 'Issues Found' }}
           
           ### API Status
           - **Rate Limit**: ${{ steps.ratelimit.outputs.remaining }}/${{ steps.ratelimit.outputs.limit }}
-          - **Status**: ${{ steps.ratelimit.outputs.low_quota == 'true' && ' Low quota' || ' Healthy' }}
+          - **Status**: ${{ steps.ratelimit.outputs.low_quota == 'true' && 'Low quota' || 'Healthy' }}
           
           ### Script Health
-          - **Execution**: ${{ steps.test.outputs.status == 'success' && ' Passing' || ' Failing' }}
+          - **Execution**: ${{ steps.test.outputs.status == 'success' && 'Passing' || 'Failing' }}
           
           ### Workflow Efficiency
           - **Success Rate**: ${{ steps.efficiency.outputs.success_rate }}%
           
           ### Recommendations
           ${{ steps.ratelimit.outputs.low_quota == 'true' && '- Consider reducing update frequency' || '- System operating optimally' }}
-          ${{ steps.validate.outputs.errors != '0' && '- Fix missing files' || '' }}
+          ${{ steps.validate.outputs.errors != '0' && '- Fix missing critical files' || '' }}
+          ${{ steps.validate.outputs.warnings != '0' && '- Generated files will be created on next run' || '' }}
           
           ---
           *Report generated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')*

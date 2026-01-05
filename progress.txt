@@ -1,9 +1,3 @@
-### Hey, I'm JoshuaGlaZ
-- ☁ API, Automation & NLP Enthusiast
-- 📖 Currently learning ~~Hapi.js~~, Django
-- ☕ Preferred Coffee over Tea
-
-```text
 '
 '     ___       __      ___    ______    
 '   /'__`\   /'__`\  /'___`\ /\  ___\   
@@ -14,4 +8,3 @@
 '    \/_____/   \/___/ \/_____/   \/___/ 
 '                                                                         📢 Updated on Mon, 05 Jan 2026 18:06:51 UTC 
 '
-```
