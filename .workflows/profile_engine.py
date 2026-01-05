@@ -27,7 +27,7 @@ def generate_ascii_art(progress, timestamp):
 '     // /_\\ \\\\ \\ \\_\\ \\ // /_\\ \\\\/\\ \\L\\ \\   {'▁' * 22}▞
 '    /\\______/ \\ \\____//\\______/ \\ \\____/
 '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
-'                                                                         📢 Updated on {ts} UTC 
+'                                                                         Updated on {ts} UTC 
 '"""
 
 def fetch_github_stats():
@@ -73,8 +73,8 @@ def generate_stats_section(stats):
     return f"""
 **⚡ Quick Stats**
 ```
-📦 {stats.get('repos', 0):>3} Public Repos    ⭐ {stats.get('stars', 0):>3} Stars Earned
-📝 {stats.get('gists', 0):>3} Gists           👥 {stats.get('followers', 0):>3} Followers
+{stats.get('repos', 0):>3} Public Repos    {stats.get('stars', 0):>3} Stars Earned
+{stats.get('gists', 0):>3} Gists           {stats.get('followers', 0):>3} Followers
 ```
 """
 
