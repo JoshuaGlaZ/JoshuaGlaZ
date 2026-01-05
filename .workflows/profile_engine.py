@@ -2,7 +2,6 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import json
-import os
 
 def calculate_year_progress():
     now = datetime.now(timezone.utc)
@@ -27,74 +26,24 @@ def generate_ascii_art(progress, timestamp):
 '     // /_\\ \\\\ \\ \\_\\ \\ // /_\\ \\\\/\\ \\L\\ \\   {'▁' * 22}▞
 '    /\\______/ \\ \\____//\\______/ \\ \\____/
 '    \\/_____/   \\/___/ \\/_____/   \\/___/ 
-'                                                                         Updated on {ts} UTC 
+'                                                          Updated on {ts} UTC 
 '"""
 
-def fetch_github_stats():
-    """Fetch GitHub stats via API if token available"""
-    token = os.getenv('GH_TOKEN')
-    username = os.getenv('GITHUB_REPOSITORY', '/').split('/')[0]
-    
-    if not token:
-        return {}
-    
-    try:
-        import urllib.request
-        headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
-        
-        req = urllib.request.Request(f'https://api.github.com/users/{username}', headers=headers)
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode())
-            return {
-                'repos': data.get('public_repos', 0),
-                'gists': data.get('public_gists', 0),
-                'followers': data.get('followers', 0),
-                'stars': sum(repo.get('stargazers_count', 0) for repo in fetch_user_repos(username, token)[:10])
-            }
-    except Exception:
-        return {}
-
-def fetch_user_repos(username, token):
-    """Fetch user repositories"""
-    try:
-        import urllib.request
-        headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
-        req = urllib.request.Request(f'https://api.github.com/users/{username}/repos?per_page=100', headers=headers)
-        with urllib.request.urlopen(req, timeout=5) as response:
-            return json.loads(response.read().decode())
-    except Exception:
-        return []
-
-def generate_stats_section(stats):
-    """Generate statistics section if available"""
-    if not stats:
-        return ""
-    
-    return f"""
-**Quick Stats**
-```
-{stats.get('repos', 0):>3} Public Repos    {stats.get('stars', 0):>3} Stars Earned
-{stats.get('gists', 0):>3} Gists           {stats.get('followers', 0):>3} Followers
-```
-"""
-
-def generate_readme(progress, timestamp, stats):
+def generate_readme(progress, timestamp):
     ascii_block = f"```text\n{generate_ascii_art(progress, timestamp)}\n```"
-    stats_section = generate_stats_section(stats)
     
     return f"""### Hey, I'm JoshuaGlaZ
 - ☁ API, Automation & NLP Enthusiast
 - 📖 Currently learning ~~Hapi.js~~, Django
 - ☕ Preferred Coffee over Tea
-{stats_section}
+
 {ascii_block}
 """
 
 def main():
     progress, timestamp = calculate_year_progress()
-    stats = fetch_github_stats()
     
-    readme_content = generate_readme(progress, timestamp, stats)
+    readme_content = generate_readme(progress, timestamp)
     ascii_content = generate_ascii_art(progress, timestamp)
     
     metadata_dir = Path(".workflows")
@@ -105,8 +54,7 @@ def main():
     
     metadata = {
         'progress': f"{progress * 100:.2f}",
-        'timestamp': timestamp.isoformat(),
-        'stats': stats
+        'timestamp': timestamp.isoformat()
     }
     (metadata_dir / ".metadata.json").write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     

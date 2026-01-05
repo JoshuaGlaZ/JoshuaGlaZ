@@ -33,17 +33,15 @@ jobs:
 
       - name: Generate Profile Data
         id: generate
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           progress=$(python .workflows/profile_engine.py)
           echo "progress=$progress" >> $GITHUB_OUTPUT
-          echo "commit_msg=🤖 Auto-update: Year ${progress}% complete" >> $GITHUB_OUTPUT
+          echo "commit_msg=Auto-update: Year ${progress}% complete" >> $GITHUB_OUTPUT
 
       - name: Check for Changes
         id: check
         run: |
-          if git diff --quiet HEAD README.md progress.txt 2>/dev/null; then
+          if git diff --quiet HEAD README.md .workflows/progress.txt 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -56,7 +54,7 @@ jobs:
           name: profile-assets
           path: |
             README.md
-            progress.txt
+            .workflows/progress.txt
             .workflows/.metadata.json
           retention-days: 1
 
@@ -84,7 +82,7 @@ jobs:
 
   deploy-site:
     needs: analyze
-    if: needs.analyze.outputs.changed == 'true'
+    if: needs.analyze.outputs.changed == 'true' && secrets.GH_PAT != ''
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
@@ -95,13 +93,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: JoshuaGlaZ/joshuaglaz.github.io
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           path: site
 
       - name: Update Site Snippet
         run: |
           mkdir -p site/_snippets
-          cp progress.txt site/_snippets/progress.txt
+          cp .workflows/progress.txt site/_snippets/progress.txt
 
       - name: Commit & Push Site
         working-directory: site
@@ -119,7 +117,7 @@ jobs:
     steps:
       - name: Create Summary
         run: |
-          echo "## 📊 Profile Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Profile Update Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Progress**: ${{ needs.analyze.outputs.progress }}%" >> $GITHUB_STEP_SUMMARY
           echo "- **Main Repo**: ${{ needs.deploy-main.result }}" >> $GITHUB_STEP_SUMMARY
