@@ -1,0 +1,163 @@
+name: Profile Health Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"  # Weekly on Sunday
+  workflow_run:
+    workflows: ["Profile Automation Engine"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Profile Files
+        id: validate
+        run: |
+          errors=0
+          
+          if [ ! -f "README.md" ]; then
+            echo "README.md missing"
+            ((errors++))
+          fi
+          
+          if [ ! -f "progress.txt" ]; then
+            echo "progress.txt missing"
+            ((errors++))
+          fi
+          
+          if [ ! -f ".workflows/profile_engine.py" ]; then
+            echo "profile_engine.py missing"
+            ((errors++))
+          fi
+          
+          if [ -f ".workflows/.metadata.json" ]; then
+            last_update=$(jq -r '.timestamp' .workflows/.metadata.json 2>/dev/null || echo "unknown")
+            echo "Last update: $last_update"
+          fi
+          
+          echo "errors=$errors" >> $GITHUB_OUTPUT
+
+      - name: Check API Rate Limits
+        id: ratelimit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          response=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/rate_limit)
+          
+          remaining=$(echo $response | jq -r '.rate.remaining')
+          limit=$(echo $response | jq -r '.rate.limit')
+          reset=$(echo $response | jq -r '.rate.reset')
+          
+          echo "remaining=$remaining" >> $GITHUB_OUTPUT
+          echo "limit=$limit" >> $GITHUB_OUTPUT
+          
+          echo "Rate Limit: $remaining/$limit remaining"
+          
+          if [ "$remaining" -lt 100 ]; then
+            echo "Low rate limit"
+            echo "low_quota=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test Script Execution
+        id: test
+        run: |
+          python .workflows/profile_engine.py > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "Script executed successfully"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "Script execution failed"
+            echo "status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check Workflow Efficiency
+        id: efficiency
+        run: |
+          workflow_runs=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?per_page=10" \
+            | jq -r '.workflow_runs[] | select(.name == "Profile Automation Engine") | .conclusion' \
+            | head -10)
+          
+          success_count=$(echo "$workflow_runs" | grep -c "success" || true)
+          total_count=$(echo "$workflow_runs" | wc -l || echo 0)
+          
+          if [ "$total_count" -gt 0 ]; then
+            success_rate=$(( success_count * 100 / total_count ))
+            echo "success_rate=$success_rate" >> $GITHUB_OUTPUT
+            echo "Success rate: ${success_rate}% (${success_count}/${total_count})"
+          fi
+
+      - name: Generate Health Report
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## Profile Health Check Report
+          
+          ### File Validation
+          - **Status**: ${{ steps.validate.outputs.errors == '0' && 'All files present' || 'Missing files' }}
+          - **Errors**: ${{ steps.validate.outputs.errors }}
+          
+          ### API Status
+          - **Rate Limit**: ${{ steps.ratelimit.outputs.remaining }}/${{ steps.ratelimit.outputs.limit }}
+          - **Status**: ${{ steps.ratelimit.outputs.low_quota == 'true' && ' Low quota' || ' Healthy' }}
+          
+          ### Script Health
+          - **Execution**: ${{ steps.test.outputs.status == 'success' && ' Passing' || ' Failing' }}
+          
+          ### Workflow Efficiency
+          - **Success Rate**: ${{ steps.efficiency.outputs.success_rate }}%
+          
+          ### Recommendations
+          ${{ steps.ratelimit.outputs.low_quota == 'true' && '- Consider reducing update frequency' || '- System operating optimally' }}
+          ${{ steps.validate.outputs.errors != '0' && '- Fix missing files' || '' }}
+          
+          ---
+          *Report generated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')*
+          EOF
+
+      - name: Create Issue on Failure
+        if: steps.validate.outputs.errors != '0' || steps.test.outputs.status == 'failed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Profile Automation Health Check Failed';
+            const body = `## Health Check Alert
+            
+            The automated health check detected issues:
+            
+            - **File Validation**: ${{ steps.validate.outputs.errors }} errors
+            - **Script Test**: ${{ steps.test.outputs.status }}
+            - **Timestamp**: ${new Date().toUTCString()}
+            
+            Please investigate and fix the issues.
+            
+            [View Workflow Run](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+            
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'automated-health-check'
+            });
+            
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['automated-health-check', 'bug']
+              });
+            }
