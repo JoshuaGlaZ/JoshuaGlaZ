@@ -1,4 +1,5 @@
-name: 🚀 Profile Automation Engine
+name: Profile Automation Engine
+
 
 on:
   workflow_dispatch:
