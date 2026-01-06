@@ -36,7 +36,7 @@ jobs:
         run: |
           progress=$(python .workflows/profile_engine.py)
           echo "progress=$progress" >> $GITHUB_OUTPUT
-          echo "commit_msg=Auto-update: Year ${progress}% complete" >> $GITHUB_OUTPUT
+          echo "commit_msg=Auto-update: yearly progress to ${progress}% complete" >> $GITHUB_OUTPUT
 
       - name: Check for Changes
         id: check
