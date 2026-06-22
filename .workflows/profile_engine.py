@@ -37,6 +37,8 @@ def generate_readme(progress, timestamp):
 - 📖 Currently learning ~~Hapi.js~~, Django
 - ☕ Preferred Coffee over Tea
 
+![Daily Art](.workflows/daily_art.png)
+
 {ascii_block}
 """
 
