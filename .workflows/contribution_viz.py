@@ -88,7 +88,15 @@ def main():
     output.append(generate_streak_tracker())
     
     full_output = "\n".join(output)
-    print(full_output)
+    try:
+        print(full_output)
+    except UnicodeEncodeError:
+        try:
+            import sys
+            sys.stdout.buffer.write(full_output.encode('utf-8'))
+            print() # new line
+        except Exception:
+            print(full_output.encode('ascii', errors='replace').decode('ascii'))
     
     from pathlib import Path
     Path(".workflows/.contribution_viz.txt").write_text(full_output, encoding='utf-8')
