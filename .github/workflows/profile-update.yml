@@ -86,26 +86,30 @@ jobs:
 
   deploy-site:
     needs: analyze
-    if: needs.analyze.outputs.changed == 'true' && secrets.GH_PAT != ''
+    if: needs.analyze.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
+        if: ${{ secrets.GH_PAT != '' }}
         uses: actions/download-artifact@v4
         with:
           name: profile-assets
 
       - uses: actions/checkout@v4
+        if: ${{ secrets.GH_PAT != '' }}
         with:
           repository: JoshuaGlaZ/joshuaglaz.github.io
           token: ${{ secrets.GH_PAT }}
           path: site
 
       - name: Update Site Snippet
+        if: ${{ secrets.GH_PAT != '' }}
         run: |
           mkdir -p site/_snippets
           cp .workflows/progress.txt site/_snippets/progress.txt
 
       - name: Commit & Push Site
+        if: ${{ secrets.GH_PAT != '' }}
         working-directory: site
         run: |
           git config --local user.name "github-actions[bot]"

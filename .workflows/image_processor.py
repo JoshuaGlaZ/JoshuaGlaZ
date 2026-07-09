@@ -191,7 +191,7 @@ def main():
                 variant = "displace"
 
             primary.save(output_image_path, "PNG")
-            print(f"Success: {img_path.name} → {variant} crop=({cx},{cy})")
+            print(f"Success: {img_path.name} -> {variant} crop=({cx},{cy})")
     except Exception as e:
         print(f"Error processing image: {e}")
 
