@@ -34,8 +34,6 @@ jobs:
       - name: Generate Profile Data
         id: generate
         run: |
-          pip install Pillow
-          python .workflows/image_processor.py
           progress=$(python .workflows/profile_engine.py)
           echo "progress=$progress" >> $GITHUB_OUTPUT
           echo "commit_msg=Auto-update: yearly progress to ${progress}% complete" >> $GITHUB_OUTPUT
@@ -43,7 +41,7 @@ jobs:
       - name: Check for Changes
         id: check
         run: |
-          if git diff --quiet HEAD README.md .workflows/progress.txt .workflows/daily_art.png 2>/dev/null; then
+          if git diff --quiet HEAD README.md .workflows/progress.txt 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -58,7 +56,6 @@ jobs:
             README.md
             .workflows/progress.txt
             .workflows/.metadata.json
-            .workflows/daily_art.png
           retention-days: 1
 
   deploy-main:
@@ -80,7 +77,7 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md .workflows/progress.txt .workflows/.metadata.json .workflows/daily_art.png
+          git add README.md .workflows/progress.txt .workflows/.metadata.json
           git commit -m "${{ needs.analyze.outputs.commit_msg }}" || exit 0
           git push origin HEAD:main
 
@@ -88,28 +85,30 @@ jobs:
     needs: analyze
     if: needs.analyze.outputs.changed == 'true'
     runs-on: ubuntu-latest
+    env:
+      HAS_PAT: ${{ secrets.GH_PAT != '' }}
     steps:
       - name: Download Artifacts
-        if: ${{ secrets.GH_PAT != '' }}
+        if: env.HAS_PAT == 'true'
         uses: actions/download-artifact@v4
         with:
           name: profile-assets
 
       - uses: actions/checkout@v4
-        if: ${{ secrets.GH_PAT != '' }}
+        if: env.HAS_PAT == 'true'
         with:
           repository: JoshuaGlaZ/joshuaglaz.github.io
           token: ${{ secrets.GH_PAT }}
           path: site
 
       - name: Update Site Snippet
-        if: ${{ secrets.GH_PAT != '' }}
+        if: env.HAS_PAT == 'true'
         run: |
           mkdir -p site/_snippets
           cp .workflows/progress.txt site/_snippets/progress.txt
 
       - name: Commit & Push Site
-        if: ${{ secrets.GH_PAT != '' }}
+        if: env.HAS_PAT == 'true'
         working-directory: site
         run: |
           git config --local user.name "github-actions[bot]"
